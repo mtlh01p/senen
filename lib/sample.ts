@@ -4,11 +4,15 @@ export const main_corridors: BRTCorridor[] = [
   {id: 1, color: "#d02127", stationIds: ["1-13", "1-14", "1-15"]},
   {id: 2, color: "#d94a99", stationIds: ["2-19", "1-14"]},
   {id: 3, color: "#fbc71f", stationIds: ["3-01", "3-02", "3-03", "3-04", "3-05", "3-06", "3-07", "3-08", "3-09", "3-10", "3-11", "3-12", "8-23", "1-14"]},
-  {id: 8, color: "#d73492", stationIds: ["3-09", "3-10", "8-23",]}
+  {id: 8, color: "#d73492", stationIds: ["3-09", "3-10", "8-23",]},
+  {id: 9, color: "#43a09a", stationIds: []}
 ]
 
 export const cbrt_lines: CBRTLine[] = [
+  {id: "2A", color: "#50a6e4", stationIds: []}, 
   {id: "3H", color: "#e77721", stationIds: ["3-09", "3-10", "3-11", "3-12", "8-23", "1-15"]},
+  {id: "3F", color: "#826a20", stationIds: []},
+  {id: "9A", color: "#8fa03d", stationIds: []}
 ]
 
 export const stations: Station[] = [
@@ -95,9 +99,9 @@ export const stations: Station[] = [
   {
     id: "3-11",
     name: "Grogol",
-    codes: [{ corridorId: 3, code: 11 }],
-    brtCorridorIds: [3],
-    cbrtLineIds: ["3H"],
+    codes: [{ corridorId: 3, code: 11 }, { corridorId: 8, code: 19 }, { corridorId: 9, code: 20 }],
+    brtCorridorIds: [3, 8, 9],
+    cbrtLineIds: ["2A", "3H", "3F", "9A"],
     nbrtLineIds: []
   },
   {

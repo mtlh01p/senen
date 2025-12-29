@@ -4,13 +4,14 @@ import { BRTCorridor, StationCode } from "@/types/index";
 type Props = {
   stationCode: StationCode;
   brtCorridor: BRTCorridor;
+  scale?: number;
 };
 
-export default function StnRoundel({ stationCode, brtCorridor }: Props) {
+export default function StnRoundel({ stationCode, brtCorridor, scale }: Props) {
   return (
     <div
       className="w-14 h-14 rounded-full flex flex-col items-center justify-center text-white font-bold"
-      style={{ backgroundColor: brtCorridor.color }}
+      style={{ backgroundColor: brtCorridor.color, transform: `scale(${scale})`  }}
     >
       <span className="text-lg leading-none -mb-0.1">
         {stationCode.corridorId}
