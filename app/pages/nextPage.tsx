@@ -6,13 +6,12 @@ import { Station, BRTCorridor, CBRTLine} from "@/types";
 
 type Props = {
   doorsSide: "left" | "right";
-  isThisSide: boolean;
   thisStn: Station;
   destStn: Station;
   line_foc: BRTCorridor | CBRTLine;
 };
 
-export default function NextPage({ doorsSide, isThisSide, thisStn, destStn, line_foc }: Props) {
+export default function NextPage({ doorsSide, thisStn, destStn, line_foc }: Props) {
   return (
     <div className="flex min-h-17.5 w-full items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       {thisStn && destStn && line_foc && (
@@ -27,7 +26,7 @@ export default function NextPage({ doorsSide, isThisSide, thisStn, destStn, line
           {doorsSide === "left" ? (
             <>
               <DoorsOpen
-                isThisSide={isThisSide}
+                isThisSide={thisStn.doorside}
                 display_side="left"
               />
               <DestStn
@@ -42,7 +41,7 @@ export default function NextPage({ doorsSide, isThisSide, thisStn, destStn, line
                 line_foc={line_foc}
               />
               <DoorsOpen
-                isThisSide={isThisSide}
+                isThisSide={thisStn.doorside}
                 display_side="right"
               />
             </>

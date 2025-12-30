@@ -5,6 +5,7 @@ export type Station = {
   brtCorridorIds: number[];
   cbrtLineIds: string[];
   nbrtLineIds: string[];
+  doorside: string;
 };
 
 export type BRTCorridor = {

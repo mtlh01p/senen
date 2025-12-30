@@ -1,19 +1,18 @@
 "use client";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { stations, main_corridors, cbrt_lines } from "@/lib/sample";
 import NextPage from "./pages/nextPage";
 import ArrPage from "./pages/arrPage";
+import MapPage from "./pages/mapPage";
 
 export default function Home() {
-  const thisStn = stations.find(s => s.name === "Cempaka Mas");
-  const destStn = stations.find(s => s.name === "Taman Kota");
-  const line_foc = cbrt_lines.find(c => c.id === "2A");
-  const doorOpen = "right";
+  const thisStn = stations.find(s => s.name === "Pulo Gadung");
+  const destStn = stations.find(s => s.name === "Monumen Nasional");
+  const line_foc = main_corridors.find(c => c.id === 2);
 
   if (!thisStn || !destStn || !line_foc) return <div>Loading...</div>;
 
   const { stationIdsDir1, stationIdsDir2 } = line_foc;
-
   const thisId = thisStn.id;
   const destId = destStn.id;
 
@@ -45,21 +44,31 @@ export default function Home() {
   if (startIndex === -1 || destIndex === -1) return <div className="p-6 text-center">Not available</div>;
 
   const [pointer, setPointer] = useState(startIndex);
-  const [subPage, setSubPage] = useState<"next" | "arr">("next");
+  const [subPage, setSubPage] = useState<"next" | "map" | "arr">("next");
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  /** Auto-cycle between NextPage and MapPage */
   useEffect(() => {
-    setPointer(startIndex);
-    setSubPage("next"); // always start with NextPage on reload
-  }, [startIndex]);
+    if (subPage === "arr") return; // no auto-cycle for ArrPage
+
+    timerRef.current = setTimeout(() => {
+      setSubPage(prev => (prev === "next" ? "map" : "next"));
+    }, 6000); // 6s cycle
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [subPage, pointer]);
 
   const currentStation = stations.find(s => s.id === chosenDir[pointer]);
   if (!currentStation) return <div className="p-6 text-center">Not available</div>;
 
   /** HANDLERS */
   const handleNext = () => {
-    if (subPage === "next") {
-      // move to ArrPage of current station
+    if (subPage === "next" || subPage === "map") {
+      // go to ArrPage manually
       setSubPage("arr");
+      if (timerRef.current) clearTimeout(timerRef.current);
     } else {
       // move to NextPage of next station
       if (pointer < destIndex) {
@@ -70,15 +79,15 @@ export default function Home() {
   };
 
   const handlePrev = () => {
-    // always go to NextPage of previous station
     if (pointer > startIndex) {
       setPointer(p => p - 1);
       setSubPage("next");
     }
   };
 
-  /** RENDER CURRENT PAGE */
-  const PageComponent = subPage === "next" ? NextPage : ArrPage;
+  /** Render correct component */
+  const PageComponent =
+    subPage === "next" ? NextPage : subPage === "map" ? MapPage : ArrPage;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -86,7 +95,6 @@ export default function Home() {
       <div className="flex flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
         <PageComponent
           doorsSide="right"
-          isThisSide={doorOpen === "right"}
           thisStn={currentStation}
           destStn={destStn}
           line_foc={line_foc}
@@ -97,7 +105,6 @@ export default function Home() {
       <div className="flex flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
         <PageComponent
           doorsSide="left"
-          isThisSide={doorOpen === "left"}
           thisStn={currentStation}
           destStn={destStn}
           line_foc={line_foc}

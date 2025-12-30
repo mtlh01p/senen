@@ -1,17 +1,70 @@
 import Image from "next/image";
-import { stations, main_corridors, cbrt_lines } from "@/lib/sample";
-import MainStnFrame from "@/app/components/MainStnFrame";
+import { useState, useEffect, useMemo } from "react";
+import { stations } from "@/lib/sample";
+import { Station, BRTCorridor, CBRTLine } from "@/types";
+import StationLine from "@/app/components/StationLine";
 
-export default function Home() {
-  const exampleStation1 = stations.find(s => s.name === "Damai");
-  const exampleLineFoc1 = main_corridors.find(c => c.id === 8);
+type Props = {
+  doorsSide: "left" | "right";
+  thisStn: Station;
+  destStn: Station;
+  line_foc: BRTCorridor | CBRTLine;
+}
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      {exampleStation1 && exampleLineFoc1 && (
-        <MainStnFrame station={exampleStation1} line_foc={exampleLineFoc1} />
-      )}
-    </div>
-  );
+export default function MapPage({doorsSide, thisStn, destStn, line_foc} : Props) {
+    if (!thisStn || !destStn || !line_foc) return <div>Loading...</div>;
+  
+    const { stationIdsDir1, stationIdsDir2 } = line_foc;
+  
+    const thisId = thisStn.id;
+    const destId = destStn.id;
+  
+    const inDir1This = stationIdsDir1.includes(thisId);
+    const inDir1Dest = stationIdsDir1.includes(destId);
+    const inDir2This = stationIdsDir2.includes(thisId);
+    const inDir2Dest = stationIdsDir2.includes(destId);
+  
+    if ((!inDir1This && !inDir2This) || (!inDir1Dest && !inDir2Dest)) {
+      return <div className="p-6 text-center">Not available</div>;
+    }
+  
+    const chosenDir = useMemo(() => {
+      if (inDir1This && inDir1Dest && !(inDir2This && inDir2Dest)) return stationIdsDir1;
+      if (inDir2This && inDir2Dest && !(inDir1This && inDir1Dest)) return stationIdsDir2;
+  
+      const idx1This = stationIdsDir1.indexOf(thisId);
+      const idx1Dest = stationIdsDir1.indexOf(destId);
+      const idx2This = stationIdsDir2.indexOf(thisId);
+      const idx2Dest = stationIdsDir2.indexOf(destId);
+  
+      if (idx1This !== -1 && idx1Dest !== -1 && idx1This < idx1Dest) return stationIdsDir1;
+      return stationIdsDir2;
+    }, [inDir1This, inDir1Dest, inDir2This, inDir2Dest, stationIdsDir1, stationIdsDir2, thisId, destId]);
+  
+    const startIndex = chosenDir.indexOf(thisId);
+    const destIndex = chosenDir.indexOf(destId);
+  
+    if (startIndex === -1 || destIndex === -1) return <div className="p-6 text-center">Not available</div>;
+  
+    const [pointer, setPointer] = useState(startIndex);
+    const [subPage, setSubPage] = useState<"next" | "arr">("next");
+  
+    useEffect(() => {
+      setPointer(startIndex);
+      setSubPage("next"); // always start with NextPage on reload
+    }, [startIndex]);
+  
+    const currentStation = stations.find(s => s.id === chosenDir[pointer]);
+    if (!currentStation) return <div className="p-6 text-center">Not available</div>;
+    return (
+      <div className="flex min-h-22.5 w-full items-center justify-center">
+        <StationLine
+          doorsSide={doorsSide}
+          thisStn={thisStn}
+          destStn={destStn}
+          line_foc={line_foc}
+        />
+      </div>
+    )
 }
 

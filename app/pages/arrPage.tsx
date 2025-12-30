@@ -6,13 +6,12 @@ import { BRTCorridor, CBRTLine, Station } from "@/types";
 
 type Props = {
   doorsSide: "left" | "right";
-  isThisSide: boolean;
   thisStn: Station;
   destStn: Station;
   line_foc: BRTCorridor | CBRTLine;
 };
 
-export default function ArrPage({ doorsSide, isThisSide, thisStn, destStn, line_foc }: Props) {
+export default function ArrPage({ doorsSide, thisStn, destStn, line_foc }: Props) {
 
   return (
     <div className="flex min-h-17.5 w-full items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -28,7 +27,7 @@ export default function ArrPage({ doorsSide, isThisSide, thisStn, destStn, line_
           {doorsSide === "left" ? (
             <>
               <DoorsOpen
-                isThisSide={isThisSide}
+                isThisSide={thisStn.doorside}
                 display_side="left"
               />
               <DestStn
@@ -43,7 +42,7 @@ export default function ArrPage({ doorsSide, isThisSide, thisStn, destStn, line_
                 line_foc={line_foc}
               />
               <DoorsOpen
-                isThisSide={isThisSide}
+                isThisSide={thisStn.doorside}
                 display_side="right"
               />
             </>
