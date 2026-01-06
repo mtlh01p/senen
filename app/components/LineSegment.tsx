@@ -5,11 +5,20 @@ type Props = {
   color: string;
   fullOpacity: boolean;
   width?: number;
+  side?: "left" | "right";
+  focused?: boolean;
 };
 
-export default function LineSegment({ color, fullOpacity, width }: Props) {
+export default function LineSegment({
+  color,
+  fullOpacity,
+  width,
+  side,
+  focused,
+}: Props) {
   return (
-    <div className="flex items-center" style={{ width }}>
+    <div className="relative flex items-center" style={{ width }}>
+      {/* Line */}
       <div
         className="h-2 w-full rounded"
         style={{
@@ -17,6 +26,15 @@ export default function LineSegment({ color, fullOpacity, width }: Props) {
           opacity: fullOpacity ? 1 : 0.3,
         }}
       />
+
+        {focused && side && (
+          <span
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 font-bold
+                      text-white text-xl blink pointer-events-none z-10"
+          >
+            {side === "left" ? "»" : "«"}
+          </span>
+        )}
     </div>
   );
 }

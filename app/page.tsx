@@ -6,9 +6,9 @@ import ArrPage from "./pages/arrPage";
 import MapPage from "./pages/mapPage";
 
 export default function Home() {
-  const thisStn = stations.find(s => s.name === "Pulo Gadung");
+  const thisStn = stations.find(s => s.name === "Cililitan");
   const destStn = stations.find(s => s.name === "Monumen Nasional");
-  const line_foc = main_corridors.find(c => c.id === 2);
+  const line_foc = cbrt_lines.find(c => c.id === "5C");
 
   if (!thisStn || !destStn || !line_foc) return <div>Loading...</div>;
 
@@ -53,7 +53,7 @@ export default function Home() {
 
     timerRef.current = setTimeout(() => {
       setSubPage(prev => (prev === "next" ? "map" : "next"));
-    }, 6000); // 6s cycle
+    }, 10000); // 10s cycle
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);

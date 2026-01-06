@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { useState, useEffect, useMemo } from "react";
 import { stations } from "@/lib/sample";
 import { Station, BRTCorridor, CBRTLine } from "@/types";

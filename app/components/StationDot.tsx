@@ -1,30 +1,47 @@
 "use client";
+import { BRTCorridor, CBRTLine } from "@/types";
+import CorRoundel from "./CorRoundel";
 import React from "react";
 
 type Props = {
   name: string;
   reached: boolean;
   willReach: boolean;
+  oneWay: boolean;
+  focused: boolean;
   side: "left" | "right";
+  roundels?: (BRTCorridor | CBRTLine)[];
 };
 
-export default function StationDot({ name, reached, willReach, side }: Props) {
+
+export default function StationDot({
+  name,
+  reached,
+  willReach,
+  side,
+  oneWay,
+  focused,
+  roundels,
+}: Props) {
   const opacity = reached || willReach ? 0.3 : 1;
+  const shape = oneWay ? (side === "right" ? "◀" : "▶") : "●";
   const angle = side === "right" ? -60 : 60;
 
   return (
-    /* w-12 (48px) ensures every dot is exactly 48px from the center of the next */
-    <div className="flex flex-col items-center w-4 flex-shrink-0 relative">
+    <div className="relative flex flex-col items-center w-4 shrink-0">
       
-      {/* Label: Using absolute so it doesn't push the container width */}
+      {/* Label */}
       <span
-        className="absolute text-white text-[14px] leading-none whitespace-nowrap"
+        className={[
+          "absolute text-[14px] leading-none whitespace-nowrap",
+          focused
+            ? "text-black bg-white px-2 py-0.5 rounded-full"
+            : "text-white",
+        ].join(" ")}
         style={{
-          bottom: "24px", // Positioned above the dot
-          // Pivot from the center-bottom of the text to keep it aligned with dot center
+          bottom: "24px",
           transformOrigin: side === "right" ? "left bottom" : "right bottom",
           transform: `rotate(${angle}deg)`,
-          // Adjust horizontal nudge so the start of the text aligns with dot center
           left: side === "right" ? "50%" : "auto",
           right: side === "right" ? "auto" : "50%",
           opacity,
@@ -33,11 +50,53 @@ export default function StationDot({ name, reached, willReach, side }: Props) {
         {name}
       </span>
 
-      {/* Dot */}
+      {/* Dot (ANCHOR) */}
       <div
-        className="w-4 h-4 rounded-full bg-white relative z-10 border-2 border-black"
+        className={`text-white ${oneWay ? "text-lg" : "text-3xl"} leading-none`}
         style={{ opacity }}
-      />
+      >
+        {shape}
+      </div>
+{roundels && roundels.length > 0 && (
+  <div
+    className="absolute flex flex-col items-center mt-px"
+    style={{
+      top: "100%", // visually below the dot
+      opacity,
+    }}
+  >
+    {(() => {
+      const visibleRoundels = roundels.slice(0, 4); // max 4
+      const rows: (BRTCorridor | CBRTLine)[][] = [];
+
+      switch (visibleRoundels.length) {
+        case 1:
+          rows.push([visibleRoundels[0]]);
+          break;
+        case 2:
+          rows.push(visibleRoundels);
+          break;
+        case 3:
+          rows.push(visibleRoundels.slice(0, 2));
+          rows.push([visibleRoundels[2]]);
+          break;
+        case 4:
+          rows.push(visibleRoundels.slice(0, 2));
+          rows.push(visibleRoundels.slice(2, 4));
+          break;
+      }
+
+      return rows.map((row, rowIdx) => (
+        <div key={rowIdx} className="flex justify-center items-center gap-px">
+          {row.map(line => (
+            <CorRoundel key={line.id} brtCorridor={line} scale={0.6} />
+          ))}
+        </div>
+      ));
+    })()}
+  </div>
+)}
+
     </div>
   );
 }
