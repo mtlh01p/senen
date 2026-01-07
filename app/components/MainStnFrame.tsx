@@ -75,7 +75,7 @@ export default function MainStnFrame({ station, line_foc }: Props) {
   }, [station.brtCorridorIds, station.cbrtLineIds, line_foc]);
 
   return (
-    <div className="flex items-center gap-4 p-4 rounded-lg bg-black text-white shadow-sm">
+    <div className="flex items-center gap-4 p-4 rounded-lg bg-black font-main text-white shadow-sm">
       {/* StationCode Roundels */}
       <div className="flex gap-3">
         {orderedCodes.map(code => {

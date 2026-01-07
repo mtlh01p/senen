@@ -1,7 +1,7 @@
 "use client";
 import MainStnFrame from "@/app/components/MainStnFrame";
-import DestStn from "../components/DestStn";
-import DoorsOpen from "../components/DoorsOpen";
+import DestStn from "@/app/components/DestStn";
+import DoorsOpen from "@/app/components/DoorsOpen";
 import { Station, BRTCorridor, CBRTLine} from "@/types";
 
 type Props = {

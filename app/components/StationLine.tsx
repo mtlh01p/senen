@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo, useEffect, useRef } from "react";
-import StationDot from "./StationDot";
-import LineSegment from "./LineSegment";
+import StationDot from "@/app/components/StationDot";
+import LineSegment from "@/app/components/LineSegment";
 import { stations, main_corridors, cbrt_lines } from "@/lib/sample";
 import { Station, BRTCorridor, CBRTLine } from "@/types";
 

@@ -56,7 +56,7 @@ export default function MapPage({doorsSide, thisStn, destStn, line_foc} : Props)
     const currentStation = stations.find(s => s.id === chosenDir[pointer]);
     if (!currentStation) return <div className="p-6 text-center">Not available</div>;
     return (
-      <div className="flex min-h-22.5 w-full items-center justify-center">
+      <div className="flex min-h-22.5 w-full items-center justify-center font-pt">
         <StationLine
           doorsSide={doorsSide}
           thisStn={thisStn}

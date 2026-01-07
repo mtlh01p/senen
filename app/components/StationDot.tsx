@@ -1,6 +1,7 @@
 "use client";
 import { BRTCorridor, CBRTLine } from "@/types";
-import CorRoundel from "./CorRoundel";
+import CorRoundel from "@/app/components/CorRoundel";
+
 import React from "react";
 
 type Props = {
@@ -28,7 +29,7 @@ export default function StationDot({
   const angle = side === "right" ? -60 : 60;
 
   return (
-    <div className="relative flex flex-col items-center w-4 shrink-0">
+    <div className="relative flex flex-col items-center w-4 shrink-0 font-sans">
       
       {/* Label */}
       <span

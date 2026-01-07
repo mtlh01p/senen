@@ -1,14 +1,14 @@
 "use client";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { stations, main_corridors, cbrt_lines } from "@/lib/sample";
-import NextPage from "./pages/nextPage";
-import ArrPage from "./pages/arrPage";
-import MapPage from "./pages/mapPage";
+import NextPage from "@/app/pages/nextPage";
+import ArrPage from "@/app/pages/arrPage";
+import MapPage from "@/app/pages/mapPage";
 
 export default function Home() {
-  const thisStn = stations.find(s => s.name === "Cililitan");
-  const destStn = stations.find(s => s.name === "Monumen Nasional");
-  const line_foc = cbrt_lines.find(c => c.id === "5C");
+  const thisStn = stations.find(s => s.name === "Rawa Selatan");
+  const destStn = stations.find(s => s.name === "Rawa Buaya");
+  const line_foc = cbrt_lines.find(c => c.id === "2A");
 
   if (!thisStn || !destStn || !line_foc) return <div>Loading...</div>;
 
