@@ -1,15 +1,15 @@
 "use client";
 import React from "react";
-import { Station, BRTCorridor, CBRTLine, NBRTLine, StationCode } from "@/types/index";
+import { Station, BRTCorridor, CBRTLine, NBRTLine, BranchBRTLine, StationCode } from "@/types/index";
 import StnRoundel from "@/app/components/StnRoundel";
 import CorRoundel from "@/app/components/CorRoundel";
-import { main_corridors, cbrt_lines, nbrt_lines } from "@/lib/sample";
+import { main_corridors, cbrt_lines, nbrt_lines, branchbrt_lines } from "@/lib/sample";
 import VisibilityChecker from "@/app/components/VisibilityChecker";
 import { Time } from "@/lib/time";
 
 type Props = {
   station: Station;
-  line_foc: BRTCorridor | CBRTLine;
+  line_foc: BRTCorridor | CBRTLine | BranchBRTLine,
   doorfocus: string;
 };
 
@@ -78,7 +78,10 @@ const corRoundels = React.useMemo(() => {
 
   // 4. Move focused line to front (overrides everything else)
   if (line_foc) {
-    const index = ordered.findIndex(c => c.id === line_foc.id);
+    let index = ordered.findIndex(c => c.id === line_foc.id);
+    if (index === -1 && 'mainBRTC' in line_foc) {
+      index = ordered.findIndex(c => c.mainBRTC === line_foc.mainBRTC);
+    }
     if (index !== -1) {
       const [foc] = ordered.splice(index, 1);
       ordered.unshift(foc);
@@ -99,13 +102,19 @@ function parseStationId(id: string) {
 const stationOneWayThisLine = React.useMemo(() => {
   const { base, suffix } = parseStationId(station.id);
 
-  const dir1Matches = line_foc.stationIdsDir1
+  let dir1Matches = line_foc.stationIdsDir1
     .map(parseStationId)
     .filter(s => s.base === base);
 
-  const dir2Matches = line_foc.stationIdsDir2
+  let dir2Matches = line_foc.stationIdsDir2
     .map(parseStationId)
     .filter(s => s.base === base);
+
+  if("lineRepId" in line_foc) {
+    const lineCheckBranch = main_corridors.find(c => c.mainBRTC === line_foc.mainBRTC);
+    dir1Matches = lineCheckBranch?.stationIdsDir1.map(parseStationId).filter(s => s.base === base) ?? [];
+    dir2Matches = lineCheckBranch?.stationIdsDir2.map(parseStationId).filter(s => s.base === base) ?? []; 
+  }
 
   // Not present in either direction (shouldn't happen, but safe)
   if (dir1Matches.length === 0 && dir2Matches.length === 0) {
@@ -141,7 +150,7 @@ const stationOneWayThisLine = React.useMemo(() => {
 
 const firstRoundelIsFocus = React.useMemo(() => {
   if (!line_foc || corRoundels.length === 0) return false;
-  return corRoundels[0].id === line_foc.id;
+  return (corRoundels[0].id === line_foc.id || ("lineRepId" in line_foc && corRoundels[0].mainBRTC === line_foc.mainBRTC));
 }, [corRoundels, line_foc]);
 
 const TrainVisibility = VisibilityChecker({ timeType: Time.Day7 });

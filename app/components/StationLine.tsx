@@ -2,14 +2,14 @@
 import React, { useMemo, useEffect, useRef, useCallback } from "react";
 import StationDot from "@/app/components/StationDot";
 import LineSegment from "@/app/components/LineSegment";
-import { stations, main_corridors, cbrt_lines, nbrt_lines } from "@/lib/sample";
-import { Station, BRTCorridor, CBRTLine } from "@/types";
+import { stations, main_corridors, cbrt_lines, nbrt_lines, branchbrt_lines, unavailableStnIds } from "@/lib/sample";
+import { Station, BRTCorridor, CBRTLine, BranchBRTLine } from "@/types";
 import VisibilityChecker from "./VisibilityChecker";
 import { Time } from "@/lib/time";
 import FarLineSegment from "./FarLineSegment";
 
 type Props = {
-  line_foc: BRTCorridor | CBRTLine;
+  line_foc: BRTCorridor | CBRTLine | BranchBRTLine;
   thisStn: Station;
   destStn: Station;
   dirSel: string;
@@ -72,8 +72,6 @@ const chosenDir = useMemo(() => {
 }, [stationIdsDir1, stationIdsDir2, thisId, destId, dirSel]);
 
 
-const SHIFT_START_INDEX = 7;
-
 const totalStations = chosenDir.length;
 const currentIndexOriginal = chosenDir.indexOf(thisId);
 const destIndexOriginal = chosenDir.indexOf(destId);
@@ -93,6 +91,8 @@ const end = Math.max(
 // =========================
 const viewportWidth = typeof window !== "undefined" ? window.innerWidth * 0.66 : 1000;
 const minVisibleDynamic = Math.floor(viewportWidth / 42); // Your suggested metric
+
+const SHIFT_START_INDEX = Math.floor(minVisibleDynamic / 2);
 
 let start = 0;
 
@@ -130,13 +130,19 @@ const hasHiddenEnd = end < chosenDir.length;
     (stationId: string | number) => {
       const { base } = parseStationId(stationId);
 
-      const dir1Matches = stationIdsDir1
+      let dir1Matches = stationIdsDir1
         .map(parseStationId)
         .filter(s => s.base === base);
 
-      const dir2Matches = stationIdsDir2
+      let dir2Matches = stationIdsDir2
         .map(parseStationId)
         .filter(s => s.base === base);
+
+        if("lineRepId" in line_foc) {
+          const lineCheckBranch = main_corridors.find(c => c.mainBRTC === line_foc.mainBRTC);
+          dir1Matches = lineCheckBranch?.stationIdsDir1.map(parseStationId).filter(s => s.base === base) ?? [];
+          dir2Matches = lineCheckBranch?.stationIdsDir2.map(parseStationId).filter(s => s.base === base) ?? []; 
+        }
 
       // Appears in both directions → NOT one-way
       if (dir1Matches.length > 0 && dir2Matches.length > 0) {
@@ -162,7 +168,7 @@ const hasHiddenEnd = end < chosenDir.length;
       // Appears in only one direction → one-way
       return dir1Matches.length > 0 || dir2Matches.length > 0;
     },
-    [stationIdsDir1, stationIdsDir2]
+    [stationIdsDir1, stationIdsDir2, line_foc]
   );
 
   /* =========================
@@ -175,6 +181,7 @@ const hasHiddenEnd = end < chosenDir.length;
     >();
 
     stationOrder.forEach((stationId, idx) => {
+      if (unavailableStnIds.includes(stationId)) return;
       const station = stations.find(s => s.id === stationId);
       if (!station) return;
 
@@ -199,10 +206,15 @@ const hasHiddenEnd = end < chosenDir.length;
   /* =========================
      Line color
      ========================= */
-  const lineColor =
-    typeof line_foc.id === "number"
-      ? main_corridors.find(c => c.id === line_foc.id)?.color ?? "#fff"
-      : cbrt_lines.find(c => c.id === line_foc.id)?.color ?? "#fff";
+  let lineColor = null;
+  if(typeof line_foc.id === "number") {
+    lineColor = main_corridors.find(c => c.id === line_foc.id)?.color ?? "#fff";
+  }else{
+    lineColor = cbrt_lines.find(c => c.id === line_foc.id)?.color || branchbrt_lines.find(c => c.mainBRTC === line_foc.mainBRTC)?.color
+  }
+  if(lineColor === undefined) {
+    lineColor = "#fff";
+  }
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -213,7 +225,7 @@ const hasHiddenEnd = end < chosenDir.length;
     const el = containerRef.current;
     if (!el) return;
 
-    const DURATION_MS = 1200;
+    const DURATION_MS = 1600;
     const START_DELAY = 4000;
 
     const start =
@@ -281,6 +293,8 @@ const hasHiddenEnd = end < chosenDir.length;
               name={stations.find(s => s.id === chosenDir[chosenDir.length - 1])?.name || "Unknown"}
               reached={true}
               willReach={false}
+              available={!unavailableStnIds.includes(stations.find(s => s.id === chosenDir[chosenDir.length - 1])?.id || "")}
+              unavailableColor={lineColor}
               side={doorsSide}
               oneWay={false}
               stnItselfOneWay={stations.find(s => s.id === chosenDir[chosenDir.length - 1])?.oneWay ?? false}
@@ -310,6 +324,8 @@ const hasHiddenEnd = end < chosenDir.length;
               side={doorsSide}
               oneWay={false}
               stnItselfOneWay={stations.find(s => s.id === chosenDir[0])?.oneWay ?? false}
+              unavailableColor={lineColor}
+              available={!unavailableStnIds.includes(stations.find(s => s.id === chosenDir[0])?.id || "")}
               twoWayPay={stations.find(s => s.id === chosenDir[0])?.payTransfer ?? false}
               focused={false}
               roundels={[]}
@@ -365,9 +381,10 @@ const hasHiddenEnd = end < chosenDir.length;
               cbrt_lines.find(l => l.id === i.id) ||
               nbrt_lines.find(l => l.id === i.id);
             return obj ? { ...obj, _typeWeight: i.type } : null;
-          })
-          .filter(Boolean)
-          .sort((a: any, b: any) => {
+            })
+            .filter(Boolean)
+            .filter(i => !(typeof i.id === "number" && "lineRepId" in line_foc && line_foc.mainBRTC === i.mainBRTC))
+            .sort((a: any, b: any) => {
             if (a._typeWeight !== b._typeWeight)
               return a._typeWeight - b._typeWeight;
             if ((a.mainBRTC ?? 0) !== (b.mainBRTC ?? 0))
@@ -391,6 +408,8 @@ const hasHiddenEnd = end < chosenDir.length;
               twoWayPay={station.payTransfer ?? false}
               focused={station.id === thisId}
               roundels={roundelsToShow}
+              available={!unavailableStnIds.includes(station.id)}
+              unavailableColor={lineColor}
               accessible={station.accessible}
               hasTrain={station.hasTrain && TrainVisibility}
             />
@@ -448,6 +467,8 @@ const hasHiddenEnd = end < chosenDir.length;
               stnItselfOneWay={stations.find(s => s.id === chosenDir[chosenDir.length - 1])?.oneWay ?? false}
               twoWayPay={stations.find(s => s.id === chosenDir[chosenDir.length - 1])?.payTransfer ?? false}
               focused={false}
+              available={!unavailableStnIds.includes(stations.find(s => s.id === chosenDir[chosenDir.length - 1])?.id || "")}
+              unavailableColor={lineColor}
               roundels={[]}
               accessible={stations.find(s => s.id === chosenDir[chosenDir.length - 1])?.accessible ?? false}
               hasTrain={stations.find(s => s.id === chosenDir[chosenDir.length - 1])?.hasTrain && TrainVisibility}
@@ -473,6 +494,8 @@ const hasHiddenEnd = end < chosenDir.length;
               oneWay={false}
               stnItselfOneWay={stations.find(s => s.id === chosenDir[0])?.oneWay ?? false}
               twoWayPay={stations.find(s => s.id === chosenDir[0])?.payTransfer ?? false}
+              available={!unavailableStnIds.includes(stations.find(s => s.id === chosenDir[0])?.id || "")}
+              unavailableColor={lineColor}
               focused={false}
               roundels={[]}
               accessible={stations.find(s => s.id === chosenDir[0])?.accessible ?? false}

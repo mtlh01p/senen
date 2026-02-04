@@ -1,24 +1,30 @@
 "use client";
 import { useMemo, useState } from "react";
-import { stations, main_corridors, cbrt_lines } from "@/lib/sample";
+import { stations, main_corridors, cbrt_lines, branchbrt_lines, unavailableStnIds } from "@/lib/sample";
 import CorRoundel from "@/app/components/CorRoundel";
-import { BRTCorridor, CBRTLine } from "@/types";
+import { BranchBRTLine, BRTCorridor, CBRTLine } from "@/types";
 import VisibilityChecker from "@/app/components/VisibilityChecker";
 
-type Line = BRTCorridor | CBRTLine;
+type Line = BRTCorridor | CBRTLine | BranchBRTLine;
 
 export default function Home() {
   const allLines: Line[] = useMemo(
-    () => [...main_corridors, ...cbrt_lines],
+    () => [...main_corridors, ...cbrt_lines, ...branchbrt_lines],
     []
   );
 
   const [focusedLine, setFocusedLine] = useState<Line | null>(null);
   const [direction, setDirection] = useState<1 | 2 | null>(null);
-  const [firstStationOptions, setFirstStationOptions] = useState<Line["stationIdsDir1"] | Line["stationIdsDir2"] | null>(null);
-  const [lastStationOptions, setLastStationOptions] = useState<Line["stationIdsDir1"] | Line["stationIdsDir2"] | null>(null);
   const [firstStation, setFirstStation] = useState<number | null>(null);
   const [lastStation, setLastStation] = useState<number | null>(null);
+
+  const stationOptions = useMemo(() => {
+  if (!focusedLine || !direction) return [];
+  const ids =
+    direction === 1 ? focusedLine.stationIdsDir1 : focusedLine.stationIdsDir2;
+
+  return ids.filter(id => !unavailableStnIds.includes(id));
+}, [focusedLine, direction]);
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center">
@@ -41,8 +47,7 @@ export default function Home() {
                 setDirection(null);
                 setFirstStation(null);
                 setLastStation(null);
-                setFirstStationOptions(null);
-                setLastStationOptions(null);
+
               }}
               style={{ cursor: isVisible ? "pointer" : "not-allowed", opacity: isVisible ? 1 : 0.4 }}
               className={`p-1 rounded-full transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -64,21 +69,11 @@ export default function Home() {
           <span className="text-zinc-700 dark:text-zinc-300">Direction:</span>
           <select
           value={direction ?? ""}
-          onChange={(e) => {
-            setDirection(Number(e.target.value) as 1 | 2);
-            setFirstStationOptions(
-            Number(e.target.value) === 1
-              ? focusedLine.stationIdsDir1
-              : focusedLine.stationIdsDir2
-            );
-            setLastStationOptions(
-            Number(e.target.value) === 1
-              ? focusedLine.stationIdsDir1
-              : focusedLine.stationIdsDir2
-            );
-            setFirstStation(null);
-            setLastStation(null);
-          }}
+            onChange={(e) => {
+              setDirection(Number(e.target.value) as 1 | 2);
+              setFirstStation(null);
+              setLastStation(null);
+            }}
           className="px-3 py-2 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
           <option value="" disabled>
@@ -91,7 +86,7 @@ export default function Home() {
         )}
 
         {/* Stations */}
-        {firstStationOptions && lastStationOptions && (
+        {stationOptions.length > 0 && (
         <div className="flex gap-4 items-center flex-wrap">
           <span className="text-zinc-700 dark:text-zinc-300">From:</span>
           <select
@@ -102,11 +97,11 @@ export default function Home() {
           <option value="" disabled>
             Select first station
           </option>
-          {firstStationOptions.map((stnId, idx) => (
-            <option key={stnId} value={idx}>
-            {stations.find((s) => s.id === stnId)?.name ?? stnId}
-            </option>
-          ))}
+            {stationOptions.map((stnId, idx) => (
+              <option key={stnId} value={idx}>
+                {stations.find(s => s.id === stnId)?.name ?? stnId}
+              </option>
+            ))}
           </select>
 
           <span className="text-zinc-700 dark:text-zinc-300">To:</span>
@@ -118,11 +113,11 @@ export default function Home() {
           <option value="" disabled>
             Select last station
           </option>
-          {lastStationOptions.map((stnId, idx) => (
-            <option key={stnId} value={idx}>
-            {stations.find((s) => s.id === stnId)?.name ?? stnId}
-            </option>
-          ))}
+            {stationOptions.map((stnId, idx) => (
+              <option key={stnId} value={idx}>
+                {stations.find(s => s.id === stnId)?.name ?? stnId}
+              </option>
+            ))}
           </select>
         </div>
         )}
@@ -131,14 +126,10 @@ export default function Home() {
         {focusedLine && direction && firstStation !== null && lastStation !== null && (
         <div className="mt-4">
           <a
-          href={`/display?startStn=${
-            (direction === 1 ? focusedLine.stationIdsDir1 : focusedLine.stationIdsDir2)[firstStation]
-          }&endStn=${
-            (direction === 1 ? focusedLine.stationIdsDir1 : focusedLine.stationIdsDir2)[lastStation]
-          }&curLine=${focusedLine.id}&dirSel=${direction}`}
-          className="inline-block px-5 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
+            href={`/display?startStn=${stationOptions[firstStation]}&endStn=${stationOptions[lastStation]}&curLine=${focusedLine.id}&dirSel=${direction}`}
+            className="inline-block px-5 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
           >
-          Go to Display
+            Go to Display
           </a>
         </div>
         )}

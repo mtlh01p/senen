@@ -5,6 +5,7 @@ export type Station = {
   name: string;
   codes: StationCode[];
   brtCorridorIds: number[];
+  branchBrtLineIds?: string[];
   cbrtLineIds: string[];
   nbrtLineIds: string[];
   doorside: string;
@@ -21,8 +22,6 @@ export type BRTCorridor = {
   mainBRTC: number;
   stationIdsDir1: string[];
   stationIdsDir2: string[];
-  stationIdsDir3?: string[];
-  stationIdsDir4?: string[];
 };
 
 export type CBRTLine = {
@@ -33,6 +32,16 @@ export type CBRTLine = {
   stationIdsDir1: string[];
   stationIdsDir2: string[];
 };
+
+export type BranchBRTLine = {
+  id: string;
+  color: string;
+  time: Time;
+  mainBRTC: number;
+  lineRepId: number | string;
+  stationIdsDir1: string[];
+  stationIdsDir2: string[];
+}
 
 export type NBRTLine = {
   id: string;

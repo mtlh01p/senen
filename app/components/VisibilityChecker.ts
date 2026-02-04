@@ -57,12 +57,8 @@ export default function VisibilityChecker({ timeType }: { timeType: Time }) {
       FIVE_AM: 50000,
       TEN_AM: 100000,
       TEN_15_PM: 221500,
-      TEN_15_01_PM: 221501,
-      FOUR_59_59_AM: 45959,
       SIX_AM: 60000,
-      NINE_AM: 90000,
-      FOUR_PM: 160000,
-      EIGHT_PM: 200000,
+      THREE_PM: 150000,
     };
 
 
@@ -73,20 +69,20 @@ export default function VisibilityChecker({ timeType }: { timeType: Time }) {
     }
 
     if (timeStr.startsWith("Night")) {
-      return currentTime >= ranges.TEN_15_01_PM || currentTime <= ranges.FOUR_59_59_AM;
+      return currentTime >= ranges.TEN_15_PM || currentTime < ranges.FIVE_AM;
     }
 
     if (timeStr.startsWith("AMRush")) {
-      return currentTime >= ranges.SIX_AM && currentTime < ranges.NINE_AM;
+      return currentTime >= ranges.SIX_AM && currentTime < ranges.TEN_AM;
     }
 
     if (timeStr.startsWith("PMRush")) {
-      return currentTime >= ranges.FOUR_PM && currentTime < ranges.EIGHT_PM;
+      return currentTime >= ranges.THREE_PM && currentTime < ranges.TEN_15_PM;
     }
 
     if (timeStr.startsWith("AMPMRush")) {
-      return (currentTime >= ranges.SIX_AM && currentTime < ranges.NINE_AM) || 
-             (currentTime >= ranges.FOUR_PM && currentTime < ranges.EIGHT_PM);
+      return (currentTime >= ranges.SIX_AM && currentTime < ranges.TEN_AM) || 
+             (currentTime >= ranges.THREE_PM && currentTime < ranges.TEN_15_PM);
     }
 
     if (timeStr === "CFD") {

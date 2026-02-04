@@ -10,10 +10,11 @@ type Props = {
   doorsSide: "left" | "right";
   thisStn: Station;
   destStn: Station;
+  warning: boolean;
   line_foc: BRTCorridor | CBRTLine;
 };
 
-export default function ArrPage({ doorsSide, thisStn, destStn, line_foc }: Props) {
+export default function ArrPage({ doorsSide, thisStn, destStn, line_foc, warning }: Props) {
   if (!thisStn || !destStn || !line_foc) return notFound();
   if (!VisibilityChecker({ timeType: line_foc.time })) return notFound();
 
@@ -36,6 +37,7 @@ export default function ArrPage({ doorsSide, thisStn, destStn, line_foc }: Props
               />
               <DestStn
                 station={destStn}
+                warning={warning}
                 line_foc={line_foc}
               />
             </>
@@ -43,6 +45,7 @@ export default function ArrPage({ doorsSide, thisStn, destStn, line_foc }: Props
             <>
               <DestStn
                 station={destStn}
+                warning={warning}
                 line_foc={line_foc}
               />
               <DoorsOpen

@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState, useEffect, useRef, use } from "react";
-import { stations, main_corridors, cbrt_lines } from "@/lib/sample";
+import { stations, main_corridors, cbrt_lines, branchbrt_lines, unavailableStnIds } from "@/lib/sample";
 import { notFound } from "next/navigation";
 import NextPage from "@/app/subpages/nextPage";
 import ArrPage from "@/app/subpages/arrPage";
@@ -23,37 +23,44 @@ export default function Display({searchParams}: Props) {
 
   const thisStn = stations.find(s => s.id === startStn);
   const destStn = stations.find(s => s.id === endStn);
-  const line_foc = [...main_corridors, ...cbrt_lines].find(l => l.id.toString() === curLine);
+  const line_foc = [...main_corridors, ...cbrt_lines, ...branchbrt_lines].find(l => l.id.toString() === curLine);
   if (!thisStn || !destStn || !line_foc) return notFound();
 
   const { stationIdsDir1, stationIdsDir2 } = line_foc;
+  const dir1Available = stationIdsDir1.filter(id => !unavailableStnIds.includes(id));
+  const dir2Available = stationIdsDir2.filter(id => !unavailableStnIds.includes(id));
   const thisId = thisStn.id;
   const destId = destStn.id;
+  if (!dir1Available.includes(thisId) && !dir2Available.includes(thisId)) return notFound();
+  if (!dir1Available.includes(destId) && !dir2Available.includes(destId)) return notFound();
+  //Any station hidden is true if dir1Available has fewer stations than stationIdsDir1 or dir2Available has fewer stations than stationIdsDir2
+  const anyStationHidden = dir1Available.length < stationIdsDir1.length || dir2Available.length < stationIdsDir2.length;
+  const nonStandardType = "lineRepId" in line_foc;
 
-  const inDir1This = stationIdsDir1.includes(thisId);
-  const inDir1Dest = stationIdsDir1.includes(destId);
-  const inDir2This = stationIdsDir2.includes(thisId);
-  const inDir2Dest = stationIdsDir2.includes(destId);
+  const inDir1This = dir1Available.includes(thisId);
+  const inDir1Dest = dir1Available.includes(destId);
+  const inDir2This = dir2Available.includes(thisId);
+  const inDir2Dest = dir2Available.includes(destId);
 
   if ((!inDir1This && !inDir2This) || (!inDir1Dest && !inDir2Dest)) {
-    return notFound
+    return notFound();
   }
 
   const chosenDir = useMemo(() => {
-    if (inDir1This && inDir1Dest && !(inDir2This && inDir2Dest)) return stationIdsDir1;
-    if (inDir2This && inDir2Dest && !(inDir1This && inDir1Dest)) return stationIdsDir2;
+    if (inDir1This && inDir1Dest && !(inDir2This && inDir2Dest)) return dir1Available;
+    if (inDir2This && inDir2Dest && !(inDir1This && inDir1Dest)) return dir2Available;
 
-    const idx1This = stationIdsDir1.indexOf(thisId);
-    const idx1Dest = stationIdsDir1.indexOf(destId);
+    const idx1This = dir1Available.indexOf(thisId);
+    const idx1Dest = dir1Available.indexOf(destId);
 
-    if (idx1This !== -1 && idx1Dest !== -1 && idx1This < idx1Dest) return stationIdsDir1;
-    return stationIdsDir2;
-  }, [inDir1This, inDir1Dest, inDir2This, inDir2Dest, stationIdsDir1, stationIdsDir2, thisId, destId]);
+    if (idx1This !== -1 && idx1Dest !== -1 && idx1This < idx1Dest) return dir1Available;
+    return dir2Available;
+  }, [inDir1This, inDir1Dest, inDir2This, inDir2Dest, dir1Available, dir2Available, thisId, destId]);
 
   const startIndex = chosenDir.indexOf(thisId);
   const destIndex = chosenDir.indexOf(destId);
 
-  if (startIndex === -1 || destIndex === -1) return notFound
+  if (startIndex === -1 || destIndex === -1) return notFound();
 
   const [pointer, setPointer] = useState(startIndex);
   const [subPage, setSubPage] = useState<"next" | "map" | "arr">("next");
@@ -111,6 +118,7 @@ export default function Display({searchParams}: Props) {
           destStn={destStn}
           line_foc={line_foc}
           dirSel={dirSel}
+          warning={anyStationHidden || nonStandardType}
         />
       </div>
 
@@ -122,6 +130,7 @@ export default function Display({searchParams}: Props) {
           destStn={destStn}
           line_foc={line_foc}
           dirSel={dirSel}
+          warning={anyStationHidden || nonStandardType}
         />
       </div>
 

@@ -12,6 +12,8 @@ type Props = {
   oneWay: boolean;
   twoWayPay: boolean;
   focused: boolean;
+  available: boolean;
+  unavailableColor: string;
   side: "left" | "right";
   accessible?: boolean;
   stnItselfOneWay?: boolean;
@@ -27,44 +29,81 @@ export default function StationDot({
   side,
   oneWay,
   focused,
+  available,
   roundels,
   stnItselfOneWay,
   accessible,
   hasTrain,
-  twoWayPay
+  twoWayPay,
+  unavailableColor,
 }: Props) {
   const opacity = reached || willReach ? 0.3 : 1;
+  const unavailableOpacity = 0.3;
   const shape = oneWay ? (side === "right" ? "◀" : "▶") : "●";
   const angle = side === "right" ? -60 : 60;
+  const strike = !available ? "line-through" : "none";
 
   return (
     <div className="relative flex flex-col items-center w-4 shrink-0 font-sans">
       
       {/* Label */}
+      <span
+        className={[
+          "absolute text-[14px] leading-none whitespace-nowrap",
+          focused
+            ? "text-black bg-white px-2 py-0.5 rounded-full w-60"
+            : "text-white",
+          side === "left" ? "text-right" : "text-left",
+        ].join(" ")}
+        style={{
+          bottom: "24px",
+          transformOrigin: side === "right" ? "left bottom" : "right bottom",
+          transform: `rotate(${angle}deg)`,
+          left: side === "right" ? "50%" : "auto",
+          right: side === "right" ? "auto" : "50%",
+        }}
+      >
+        {/* LEFT SIDE ICONS */}
+        {side === "right" && (
+          <>
+            {!available && <span>❌</span>}
+            <span style={{ opacity: available ? opacity : unavailableOpacity }}>
+              {accessible && available && "♿"}
+              {twoWayPay && available && "💵"}
+              {hasTrain && available && "🚇"}
+              {stnItselfOneWay && available && oneWay && "←"}
+            </span>
+          </>
+        )}
+
+        {/* STATION NAME */}
         <span
-          className={[
-            "absolute text-[14px] leading-none whitespace-nowrap",
-            focused
-              ? "text-black bg-white px-2 py-0.5 rounded-full w-60"
-              : "text-white",
-            side === "left" ? "text-right" : "text-left",
-          ].join(" ")}
           style={{
-            bottom: "24px",
-            transformOrigin: side === "right" ? "left bottom" : "right bottom",
-            transform: `rotate(${angle}deg)`,
-            left: side === "right" ? "50%" : "auto",
-            right: side === "right" ? "auto" : "50%",
-            opacity,
+            textDecoration: strike,
+            opacity: available ? opacity : unavailableOpacity,
           }}
         >
-          {stnItselfOneWay && oneWay && side === "right" ? "←" : oneWay && side === "right" ? "" : ""}{accessible && side === "right" ? "♿" : ""}{twoWayPay && side === "right" ? "💵" : ""}{hasTrain && side === "left" ? "🚇" : ""} {name} {hasTrain && side === "right" ? "🚇" : ""}{twoWayPay && side === "left" ? "💵" : ""}{accessible && side === "left" ? "♿" : ""}{stnItselfOneWay && oneWay && side === "left" ? "→" : oneWay && side === "left" ? "" : ""}
+          {" "}{name}{" "}
         </span>
+
+        {/* RIGHT SIDE ICONS */}
+        {side === "left" && (
+          <>
+            <span style={{ opacity: available ? opacity : unavailableOpacity }}>
+              {stnItselfOneWay && available && oneWay && "→"}
+              {hasTrain && available && "🚇"}
+              {twoWayPay && available && "💵"}
+              {accessible && available && "♿"}
+            </span>
+            {!available && <span>❌</span>}
+          </>
+        )}
+      </span>
 
       {/* Dot (ANCHOR) */}
       <div
-        className={`text-white ${oneWay ? "text-lg" : "text-3xl"} leading-none`}
-        style={{ opacity }}
+        className={`${oneWay ? "text-lg" : "text-3xl"} leading-none`}
+        style={{ opacity, color: available ? "white" : unavailableColor }}
       >
         {shape}
       </div>

@@ -2,7 +2,7 @@
 import MainStnFrame from "@/app/components/MainStnFrame";
 import DestStn from "@/app/components/DestStn";
 import DoorsOpen from "@/app/components/DoorsOpen";
-import { Station, BRTCorridor, CBRTLine} from "@/types";
+import { Station, BRTCorridor, CBRTLine, BranchBRTLine } from "@/types";
 import VisibilityChecker from "@/app/components/VisibilityChecker";
 import { notFound } from "next/navigation";
 
@@ -10,10 +10,11 @@ type Props = {
   doorsSide: "left" | "right";
   thisStn: Station;
   destStn: Station;
-  line_foc: BRTCorridor | CBRTLine;
+  warning: boolean;
+  line_foc: BRTCorridor | CBRTLine | BranchBRTLine;
 };
 
-export default function NextPage({ doorsSide, thisStn, destStn, line_foc }: Props) {
+export default function NextPage({ doorsSide, thisStn, destStn, line_foc, warning }: Props) {
   if (!thisStn || !destStn || !line_foc) return notFound();
   if (!VisibilityChecker({ timeType: line_foc.time })) return notFound();
   return (
@@ -36,6 +37,7 @@ export default function NextPage({ doorsSide, thisStn, destStn, line_foc }: Prop
               <DestStn
                 station={destStn}
                 line_foc={line_foc}
+                warning={warning}
               />
             </>
           ) : (
@@ -43,6 +45,7 @@ export default function NextPage({ doorsSide, thisStn, destStn, line_foc }: Prop
               <DestStn
                 station={destStn}
                 line_foc={line_foc}
+                warning={warning}
               />
               <DoorsOpen
                 isThisSide={thisStn.doorside}

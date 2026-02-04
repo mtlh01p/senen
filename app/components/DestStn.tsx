@@ -1,16 +1,17 @@
 "use client";
 import React from "react";
-import { Station, BRTCorridor, CBRTLine, StationCode } from "@/types/index";
+import { Station, BRTCorridor, CBRTLine, BranchBRTLine, StationCode } from "@/types/index";
 import StnRoundel from "@/app/components/StnRoundel";
 import CorRoundel from "@/app/components/CorRoundel";
 import { main_corridors } from "@/lib/sample";
 
 type Props = {
   station: Station;
-  line_foc: BRTCorridor | CBRTLine;
+  line_foc: BRTCorridor | CBRTLine | BranchBRTLine;
+  warning: boolean;
 };
 
-export default function DestStn({ station, line_foc }: Props) {
+export default function DestStn({ station, line_foc, warning }: Props) {
   const orderedCodes = React.useMemo(() => {
     // Sort by brtCorridorIds first, then any remaining codes not in brtCorridorIds
     const sortedIds = [...station.brtCorridorIds].sort((a, b) => a - b);
@@ -34,7 +35,7 @@ export default function DestStn({ station, line_foc }: Props) {
   }, [station.codes, station.brtCorridorIds, line_foc]);
   const focusedCode = orderedCodes[0];
   const focusedCorridor = main_corridors.find(c => c.mainBRTC === focusedCode.corridorId);
-  const corridorMatch = focusedCorridor === line_foc;
+  const corridorMatch = focusedCorridor === line_foc || (focusedCorridor?.mainBRTC == line_foc.mainBRTC && "lineRepId" in line_foc);
 
   return (
     <div className="flex items-center gap-4 rounded-lg bg-black text-white shadow-sm">
@@ -51,6 +52,7 @@ export default function DestStn({ station, line_foc }: Props) {
               />
             )}
             <span className="font-semibold">{station.name}</span>
+            {warning && <span className="text-2xl ml-2">⚠️</span>}
           </>
         ) : (
           <>
@@ -64,6 +66,7 @@ export default function DestStn({ station, line_foc }: Props) {
               />
             )}
             <span className="font-semibold">{station.name}</span>
+            {warning && <span className="text-2xl ml-2">⚠️</span>}
           </>
         )}
       </div>
